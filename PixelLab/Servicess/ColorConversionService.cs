@@ -55,7 +55,7 @@ namespace PixelLab.Servicess
                             int index = y * stride + x * 3;
 
                             if (index + 2 < bytes)
-                            {
+                            {   
                                 byte b = srcBytes[index];
                                 byte g = srcBytes[index + 1];
                                 byte r = srcBytes[index + 2];
@@ -117,7 +117,7 @@ namespace PixelLab.Servicess
 
                             if (index + 2 < bytes)
                             {
-                                resBytes[index] = (byte)(255 - srcBytes[index]);
+                                resBytes[index]     = (byte)(255 - srcBytes[index]);
                                 resBytes[index + 1] = (byte)(255 - srcBytes[index + 1]);
                                 resBytes[index + 2] = (byte)(255 - srcBytes[index + 2]);
                             }
@@ -262,9 +262,11 @@ namespace PixelLab.Servicess
             }
             catch (Exception ex)
             {
+                Console.WriteLine(ex);
                 throw new InvalidOperationException($"فشل التحويل إلى {conversion}", ex);
             }
         }
+
         private static Bitmap ConvertBackToRGB(Bitmap source, ColorConversion reverseConversion)
         {
             if (source == null) return null;
