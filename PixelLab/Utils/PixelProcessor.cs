@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Runtime.InteropServices;
 
 namespace PixelLab.Utils
 {
@@ -56,15 +57,27 @@ namespace PixelLab.Utils
             return result;
         }
 
-        public static byte[] ReadPixels(Bitmap bmp)
+        public static byte[] ReadPixels(Bitmap bmp, out int stride)
         {
             Rectangle rect = new Rectangle(0, 0, bmp.Width, bmp.Height);
-            BitmapData bmpData = bmp.LockBits(rect, ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
 
-            int bytes = Math.Abs(bmpData.Stride) * bmp.Height;
+            BitmapData bmpData = bmp.LockBits(
+                rect,
+                ImageLockMode.ReadOnly,
+                PixelFormat.Format24bppRgb);
+
+            stride = bmpData.Stride;
+
+            int bytes = Math.Abs(stride) * bmp.Height;
+
             byte[] pixels = new byte[bytes];
 
-            System.Runtime.InteropServices.Marshal.Copy(bmpData.Scan0, pixels, 0, bytes);
+            System.Runtime.InteropServices.Marshal.Copy(
+                bmpData.Scan0,
+                pixels,
+                0,
+                bytes);
+
             bmp.UnlockBits(bmpData);
 
             return pixels;

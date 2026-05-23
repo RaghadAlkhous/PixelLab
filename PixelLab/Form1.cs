@@ -392,9 +392,15 @@ namespace PixelLab
 
             try
             {
-                byte[] pixels = PixelProcessor.ReadPixels(_workspace.WorkingImage);
+                int stride;
+                byte[] pixels = PixelProcessor.ReadPixels(_workspace.WorkingImage, out stride);
                 QuantizationService.RunOptimizedKMeans(
-                    pixels, _workspace.WorkingImage.Width, _workspace.WorkingImage.Height, k, out byte[] palette);
+                    pixels,
+                    _workspace.WorkingImage.Width,
+                    _workspace.WorkingImage.Height,
+                    stride,
+                    k,
+                    out byte[] palette); 
 
                 var lookup = QuantizationService.BuildLookup(palette);
                 Bitmap preview = PixelProcessor.ApplyQuantizationWithLockBits(_workspace.WorkingImage, palette, lookup);

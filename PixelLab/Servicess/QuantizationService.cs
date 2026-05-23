@@ -5,8 +5,14 @@ namespace PixelLab.Services
   
     public static class QuantizationService
     {
+        private static readonly Random rand = new Random();
         public static void RunOptimizedKMeans(
-            byte[] pixels, int width, int height, int k, out byte[] palette)
+            byte[] pixels,
+            int width,
+            int height,
+            int stride,
+            int k,
+            out byte[] palette)
         {
             int totalPixels = width * height;
             int channels = 3; 
@@ -28,45 +34,70 @@ namespace PixelLab.Services
                 double maxShift = 0;
 
                 // 2. Squared Euclidean + 3. Stable Items Removal
-                for (int i = 0; i < totalPixels; i++)
+                for (int y = 0; y < height; y++)
                 {
-                    if (isStable[i]) continue;
-
-                    int idx = i * channels;
-                    byte b = pixels[idx], g = pixels[idx + 1], r = pixels[idx + 2];
-
-                    double minDist = double.MaxValue;
-                    int bestCluster = 0;
-
-                    for (int c = 0; c < k; c++)
+                    for (int x = 0; x < width; x++)
                     {
-                        int cIdx = c * channels;
-                        double db = b - palette[cIdx];
-                        double dg = g - palette[cIdx + 1];
-                        double dr = r - palette[cIdx + 2];
-                        double dist = db * db + dg * dg + dr * dr; 
+                        int pixelIndex = y * width + x;
 
-                        if (dist < minDist) { minDist = dist; bestCluster = c; }
-                    }
+                        if (isStable[pixelIndex])
+                            continue;
 
-                    if (labels[i] != bestCluster)
-                    {
-                        labels[i] = bestCluster;
-                        isStable[i] = false;
-                        stabilityCount[i] = 0; 
-                        converged = false;
-                    }
-                    else
-                    {
-                        stabilityCount[i]++; 
-                        if (stabilityCount[i] >= 3)
-                            isStable[i] = true;
+                        int idx = y * stride + x * 3;
+
+                        byte b = pixels[idx];
+                        byte g = pixels[idx + 1];
+                        byte r = pixels[idx + 2];
+
+                        double minDist = double.MaxValue;
+                        int bestCluster = 0;
+
+                        for (int c = 0; c < k; c++)
+                        {
+                            int cIdx = c * channels;
+
+                            double db = b - palette[cIdx];
+                            double dg = g - palette[cIdx + 1];
+                            double dr = r - palette[cIdx + 2];
+
+                            double dist = db * db + dg * dg + dr * dr;
+
+                            if (dist < minDist)
+                            {
+                                minDist = dist;
+                                bestCluster = c;
+                            }
+                        }
+
+                        if (labels[pixelIndex] != bestCluster)
+                        {
+                            labels[pixelIndex] = bestCluster;
+
+                            isStable[pixelIndex] = false;
+
+                            stabilityCount[pixelIndex] = 0;
+
+                            converged = false;
+                        }
+                        else
+                        {
+                            stabilityCount[pixelIndex]++;
+
+                            if (stabilityCount[pixelIndex] >= 3)
+                                isStable[pixelIndex] = true;
+                        }
                     }
                 }
 
                 // Update Centroids
-                byte[] newCentroids = UpdateCentroids(pixels, labels, totalPixels, k, channels);
-
+                byte[] newCentroids = UpdateCentroids(
+                    pixels,
+                    labels,
+                    width,
+                    height,
+                    stride,
+                    k,
+                    channels);
                 // 4. Adaptive Convergence
                 for (int c = 0; c < k; c++)
                 {
@@ -85,7 +116,6 @@ namespace PixelLab.Services
 
         private static void InitializeKMeansPlusPlus(byte[] data, int count, int k, byte[] centers, int channels)
         {
-            Random rand = new Random(42);
             int first = rand.Next(count) * channels;
             Buffer.BlockCopy(data, first, centers, 0, channels);
 
@@ -126,17 +156,28 @@ namespace PixelLab.Services
             }
         }
 
-        private static byte[] UpdateCentroids(byte[] data, int[] labels, int count, int k, int channels)
+        private static byte[] UpdateCentroids(
+            byte[] data,
+            int[] labels,
+            int width,
+            int height,
+            int stride,
+            int k,
+            int channels)
         {
             byte[] newCenters = new byte[k * channels];
             int[] clusterCount = new int[k];
             double[] sumR = new double[k], sumG = new double[k], sumB = new double[k];
 
-            for (int i = 0; i < count; i++)
+            int totalPixels = width * height;
+
+            for (int i = 0; i < totalPixels; i++)
             {
                 int label = labels[i];
-                int idx = i * channels;
-                clusterCount[label]++;
+                int y = i / width;
+                int x = i % width;
+
+                int idx = y * stride + x * 3; clusterCount[label]++;
                 sumB[label] += data[idx];
                 sumG[label] += data[idx + 1];
                 sumR[label] += data[idx + 2];
@@ -152,9 +193,12 @@ namespace PixelLab.Services
                 }
                 else
                 {
-                    Random rand = new Random();
-                    int idx = rand.Next(count) * channels;
-                    Buffer.BlockCopy(data, idx, newCenters, c * channels, channels);
+                    int randomPixel = rand.Next(width * height);
+
+                    int ry = randomPixel / width;
+                    int rx = randomPixel % width;
+
+                    int idx = ry * stride + rx * 3; Buffer.BlockCopy(data, idx, newCenters, c * channels, channels);
                 }
             }
             return newCenters;
