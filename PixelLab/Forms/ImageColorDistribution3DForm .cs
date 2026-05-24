@@ -28,6 +28,7 @@ namespace PixelLab.Forms
         private readonly Panel _selectedColorBox;
         private readonly TextBox _selectedColorTextBox;
         private readonly Label _statusLabel;
+        private readonly Label _geometryDescriptionLabel;
 
         public ImageColorDistribution3DForm(PixelLabWorkspace workspace)
         {
@@ -94,8 +95,19 @@ namespace PixelLab.Forms
                 Padding = new Padding(10, 0, 0, 0)
             };
 
+            _geometryDescriptionLabel = new Label
+            {
+                Dock = DockStyle.Top,
+                Height = 80,
+                ForeColor = Color.LightGray,
+                BackColor = Color.FromArgb(30, 30, 30),
+                Font = new Font("Segoe UI", 8),
+                TextAlign = ContentAlignment.MiddleLeft
+            };
+
             BuildLayout();
             FillControls();
+            UpdateGeometryDescription();
             WireEvents();
         }
 
@@ -137,6 +149,9 @@ namespace PixelLab.Forms
 
             Controls.Add(mainSplit);
             Controls.Add(_statusLabel);
+
+            rightPanel.Controls.Add(_geometryDescriptionLabel);
+            rightPanel.Controls.Add(CreateLabel("Reference Geometry:"));
         }
 
         private void FillControls()
@@ -177,6 +192,11 @@ namespace PixelLab.Forms
             };
 
             _viewer.PointSelected += Viewer_PointSelected;
+
+            _projectionComboBox.SelectedIndexChanged += delegate
+            {
+                UpdateGeometryDescription();
+            };
         }
 
         private async Task RefreshDistributionAsync()
@@ -233,6 +253,42 @@ namespace PixelLab.Forms
                     snapshot.Dispose();
 
                 SetBusy(false);
+            }
+        }
+
+        private void UpdateGeometryDescription()
+        {
+            switch (SelectedProjection)
+            {
+                case ImageColorProjection3DType.RgbCube:
+                    _geometryDescriptionLabel.Text =
+                        "RGB is represented as a cube: X=R, Y=G, Z=B.";
+                    break;
+
+                case ImageColorProjection3DType.HsvCylinder:
+                    _geometryDescriptionLabel.Text =
+                        "HSV is represented as a cylinder: angle=Hue, radius=Saturation, height=Value.";
+                    break;
+
+                case ImageColorProjection3DType.LabSpace:
+                    _geometryDescriptionLabel.Text =
+                        "LAB uses L as vertical lightness axis, with a-b as chromatic plane.";
+                    break;
+
+                case ImageColorProjection3DType.YCbCrSpace:
+                    _geometryDescriptionLabel.Text =
+                        "YCbCr separates luma from chroma: Z=Y, X/Y plane=Cb/Cr.";
+                    break;
+
+                case ImageColorProjection3DType.YuvSpace:
+                    _geometryDescriptionLabel.Text =
+                        "YUV separates luma from chroma: Z=Y, X/Y plane=U/V.";
+                    break;
+
+                case ImageColorProjection3DType.CmykCmkSpace:
+                    _geometryDescriptionLabel.Text =
+                        "CMYK is 4D. This view shows a 3D subspace: X=C, Y=M, Z=K. The Y channel is still shown in selected values.";
+                    break;
             }
         }
 

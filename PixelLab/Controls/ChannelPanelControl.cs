@@ -412,10 +412,11 @@ namespace PixelLab.Controls
 
                 _offsetTrackBar.Scroll += delegate
                 {
-                    _offsetValueLabel.Text =
-                        _offsetTrackBar.Value.ToString();
+                    _offsetValueLabel.Text = _offsetTrackBar.Value.ToString();
 
                     RaiseChanged();
+
+
                 };
             }
 

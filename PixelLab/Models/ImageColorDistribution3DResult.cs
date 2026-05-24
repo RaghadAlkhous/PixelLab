@@ -1,10 +1,13 @@
 ﻿using System.Collections.Generic;
+using PixelLab.Enums;
 
 namespace PixelLab.Models
 {
     public class ImageColorDistribution3DResult
     {
         public List<ImageColorPoint3D> Points { get; private set; }
+
+        public ImageColorProjection3DType ProjectionType { get; set; }
 
         public string Title { get; set; }
         public string XAxisLabel { get; set; }
@@ -23,6 +26,8 @@ namespace PixelLab.Models
             XAxisLabel = "";
             YAxisLabel = "";
             ZAxisLabel = "";
+
+            ProjectionType = ImageColorProjection3DType.RgbCube;
         }
     }
 }

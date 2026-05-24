@@ -1,4 +1,6 @@
-﻿namespace PixelLab
+﻿using System.Drawing;
+
+namespace PixelLab
 {
     partial class Form1
     {
@@ -25,6 +27,7 @@
             this.imageInfoToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.resetToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.quantizeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.beforeAfterToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
@@ -71,6 +74,9 @@
             this.menuStrip1.Size = new System.Drawing.Size(1000, 24);
             this.menuStrip1.TabIndex = 0;
             this.menuStrip1.Text = "menuStrip1";
+            this.menuStrip1.BackColor = Color.FromArgb(45, 45, 48);
+            this.menuStrip1.ForeColor = Color.White;
+
             // 
             // visualizingToolStripMenuItem
             // 
@@ -104,47 +110,55 @@
                 this.imageInfoToolStripMenuItem,
                 this.resetToolStripMenuItem,
                 this.quantizeToolStripMenuItem,
+                this.beforeAfterToolStripMenuItem,
                 this.toolStripSeparator1,
                 this.exitToolStripMenuItem
             });
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             this.fileToolStripMenuItem.Size = new System.Drawing.Size(42, 20);
-            this.fileToolStripMenuItem.Text = "&ملف";
+            this.fileToolStripMenuItem.Text = "&File";
             // 
             // openToolStripMenuItem
             // 
             this.openToolStripMenuItem.Name = "openToolStripMenuItem";
             this.openToolStripMenuItem.Size = new System.Drawing.Size(166, 22);
-            this.openToolStripMenuItem.Text = "...فتح صورة";
+            this.openToolStripMenuItem.Text = "Open Image...";
             this.openToolStripMenuItem.Click += new System.EventHandler(this.openToolStripMenuItem_Click);
             // 
             // saveToolStripMenuItem
             // 
             this.saveToolStripMenuItem.Name = "saveToolStripMenuItem";
             this.saveToolStripMenuItem.Size = new System.Drawing.Size(166, 22);
-            this.saveToolStripMenuItem.Text = "...حفظ الصورة";
+            this.saveToolStripMenuItem.Text = "Save...";
             this.saveToolStripMenuItem.Click += new System.EventHandler(this.saveToolStripMenuItem_Click);
             // 
             // imageInfoToolStripMenuItem
             // 
             this.imageInfoToolStripMenuItem.Name = "imageInfoToolStripMenuItem";
             this.imageInfoToolStripMenuItem.Size = new System.Drawing.Size(166, 22);
-            this.imageInfoToolStripMenuItem.Text = "...معلومات الصورة";
+            this.imageInfoToolStripMenuItem.Text = "Image Info...";
             this.imageInfoToolStripMenuItem.Click += new System.EventHandler(this.imageInfoToolStripMenuItem_Click);
             // 
             // resetToolStripMenuItem
             // 
             this.resetToolStripMenuItem.Name = "resetToolStripMenuItem";
             this.resetToolStripMenuItem.Size = new System.Drawing.Size(166, 22);
-            this.resetToolStripMenuItem.Text = "إعادة تعيين";
+            this.resetToolStripMenuItem.Text = "Reset To Original...";
             this.resetToolStripMenuItem.Click += new System.EventHandler(this.resetToolStripMenuItem_Click);// 
             //
             // quanitizeToolStripMenuItem
             // 
             this.quantizeToolStripMenuItem.Name = "quantizeToolStripMenuItem";
             this.quantizeToolStripMenuItem.Size = new System.Drawing.Size(166, 22);
-            this.quantizeToolStripMenuItem.Text = "انتقاء الألوان";
+            this.quantizeToolStripMenuItem.Text = "Quantize Colors...";
             this.quantizeToolStripMenuItem.Click += new System.EventHandler(this.quantizeToolStripMenuItem_Click);
+            //
+            // beforeAfterToolStripMenuItem
+            // 
+            this.beforeAfterToolStripMenuItem.Name = "beforeAfterToolStripMenuItem";
+            this.beforeAfterToolStripMenuItem.Size = new System.Drawing.Size(166, 22);
+            this.beforeAfterToolStripMenuItem.Text = "Before-After Comparsion";
+            this.beforeAfterToolStripMenuItem.Click += new System.EventHandler(this.BtnBeforeAfter_Click);
             // 
             // toolStripSeparator1
             // 
@@ -155,7 +169,7 @@
             // 
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
             this.exitToolStripMenuItem.Size = new System.Drawing.Size(166, 22);
-            this.exitToolStripMenuItem.Text = "خروج";
+            this.exitToolStripMenuItem.Text = "Quit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
             // 
             // splitContainer1
@@ -163,6 +177,9 @@
             this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.splitContainer1.Location = new System.Drawing.Point(0, 24);
             this.splitContainer1.Name = "splitContainer1";
+            this.splitContainer1.BackColor = Color.FromArgb(45, 45, 48);
+            this.splitContainer1.ForeColor = Color.White;
+
             // 
             // splitContainer1.Panel1
             // 
@@ -230,6 +247,8 @@
             this.lblImageInfo.Name = "lblImageInfo";
             this.lblImageInfo.Size = new System.Drawing.Size(0, 13);
             this.lblImageInfo.TabIndex = 0;
+            this.lblImageInfo.TabIndex = 0;
+
             // 
             // groupBoxColorSpace
             // 
@@ -241,7 +260,8 @@
             this.groupBoxColorSpace.Size = new System.Drawing.Size(297, 60);
             this.groupBoxColorSpace.TabIndex = 0;
             this.groupBoxColorSpace.TabStop = false;
-            this.groupBoxColorSpace.Text = "نظام الألوان";
+            this.groupBoxColorSpace.Text = "Color Space";
+            this.groupBoxColorSpace.ForeColor = Color.White;
             // 
             // cmbColorSpace
             // 
@@ -254,7 +274,7 @@
             "YUV",
             "YCbCr",
             "LAB"});
-            this.cmbColorSpace.Location = new System.Drawing.Point(100, 25);
+            this.cmbColorSpace.Location = new System.Drawing.Point(120, 25);
             this.cmbColorSpace.Name = "cmbColorSpace";
             this.cmbColorSpace.Size = new System.Drawing.Size(120, 21);
             this.cmbColorSpace.TabIndex = 1;
@@ -267,7 +287,7 @@
             this.lblColorSpace.Name = "lblColorSpace";
             this.lblColorSpace.Size = new System.Drawing.Size(77, 13);
             this.lblColorSpace.TabIndex = 0;
-            this.lblColorSpace.Text = "اختر نظام اللون:";
+            this.lblColorSpace.Text = "Select Color Space:";
             // 
             // statusStrip1
             // 
@@ -279,12 +299,16 @@
             this.statusStrip1.Size = new System.Drawing.Size(1000, 22);
             this.statusStrip1.TabIndex = 2;
             this.statusStrip1.Text = "statusStrip1";
+            this.statusStrip1.ForeColor = Color.White;
+            this.statusStrip1.BackColor = Color.FromArgb(0, 122, 204);
+            this.statusStrip1.Height= 28;
+
             // 
             // lblStatus
             // 
             this.lblStatus.Name = "lblStatus";
             this.lblStatus.Size = new System.Drawing.Size(103, 17);
-            this.lblStatus.Text = "جاهز - اسحب صورة";
+            this.lblStatus.Text = "Ready - Drag Iamge";
             // 
             // Form1
             // 
@@ -329,6 +353,7 @@
         private System.Windows.Forms.ToolStripMenuItem imageInfoToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem resetToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem quantizeToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem beforeAfterToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem;
         private System.Windows.Forms.SplitContainer splitContainer1;

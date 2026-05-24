@@ -5,6 +5,7 @@ using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
 using PixelLab.Models;
+using PixelLab.Enums;
 
 namespace PixelLab.Controls
 {
@@ -118,7 +119,7 @@ namespace PixelLab.Controls
 
             SetupMatrices();
 
-            DrawAxesAndBox();
+            DrawReferenceGeometry();
 
             if (_result != null)
             {
@@ -420,6 +421,400 @@ namespace PixelLab.Controls
         private float DegreesToRadians(float degrees)
         {
             return (float)(degrees * Math.PI / 180.0);
+        }
+
+        private void DrawReferenceGeometry()
+        {
+            if (_result == null)
+            {
+                DrawRgbCubeReference();
+                return;
+            }
+
+            switch (_result.ProjectionType)
+            {
+                case ImageColorProjection3DType.RgbCube:
+                    DrawRgbCubeReference();
+                    break;
+
+                case ImageColorProjection3DType.HsvCylinder:
+                    DrawHsvCylinderReference();
+                    break;
+
+                case ImageColorProjection3DType.LabSpace:
+                    DrawLabReference();
+                    break;
+
+                case ImageColorProjection3DType.YCbCrSpace:
+                    DrawLumaChromaReference("YCbCr");
+                    break;
+
+                case ImageColorProjection3DType.YuvSpace:
+                    DrawLumaChromaReference("YUV");
+                    break;
+
+                case ImageColorProjection3DType.CmykCmkSpace:
+                    DrawCmykSubspaceReference();
+                    break;
+
+                default:
+                    DrawRgbCubeReference();
+                    break;
+            }
+        }
+
+        private void DrawRgbCubeReference()
+        {
+            DrawColoredAxes(
+                "R",
+                "G",
+                "B",
+                Color.Red,
+                Color.Lime,
+                Color.DeepSkyBlue);
+
+            DrawWireCube(
+                -1.0f,
+                1.0f,
+                Color.FromArgb(90, 90, 90));
+        }
+
+        private void DrawHsvCylinderReference()
+        {
+            DrawColoredAxes(
+                "Hue-X",
+                "Hue-Y",
+                "Value",
+                Color.Red,
+                Color.Lime,
+                Color.White);
+
+            GL.LineWidth(1.0f);
+
+            Color gridColor = Color.FromArgb(95, 95, 95);
+
+            // Rings at different Value levels
+            DrawCircleRing(-1.0f, 1.0f, gridColor);
+            DrawCircleRing(0.0f, 1.0f, Color.FromArgb(70, 70, 70));
+            DrawCircleRing(1.0f, 1.0f, gridColor);
+
+            // Smaller saturation rings
+            DrawCircleRing(-1.0f, 0.5f, Color.FromArgb(55, 55, 55));
+            DrawCircleRing(0.0f, 0.5f, Color.FromArgb(45, 45, 45));
+            DrawCircleRing(1.0f, 0.5f, Color.FromArgb(55, 55, 55));
+
+            // Vertical lines around cylinder
+            int segments = 24;
+
+            GL.Begin(PrimitiveType.Lines);
+            GL.Color3(gridColor);
+
+            for (int i = 0; i < segments; i++)
+            {
+                double angle = i * 2.0 * Math.PI / segments;
+
+                float x = (float)Math.Cos(angle);
+                float y = (float)Math.Sin(angle);
+
+                GL.Vertex3(x, y, -1.0f);
+                GL.Vertex3(x, y, 1.0f);
+            }
+
+            GL.End();
+
+            // Hue spokes at middle level
+            GL.Begin(PrimitiveType.Lines);
+
+            for (int i = 0; i < segments; i += 2)
+            {
+                double angle = i * 2.0 * Math.PI / segments;
+
+                float x = (float)Math.Cos(angle);
+                float y = (float)Math.Sin(angle);
+
+                GL.Vertex3(0.0f, 0.0f, 0.0f);
+                GL.Vertex3(x, y, 0.0f);
+            }
+
+            GL.End();
+        }
+
+        private void DrawCircleRing(float z, float radius, Color color)
+        {
+            int segments = 96;
+
+            GL.Color3(color);
+            GL.Begin(PrimitiveType.LineLoop);
+
+            for (int i = 0; i < segments; i++)
+            {
+                double angle = i * 2.0 * Math.PI / segments;
+
+                float x = (float)(Math.Cos(angle) * radius);
+                float y = (float)(Math.Sin(angle) * radius);
+
+                GL.Vertex3(x, y, z);
+            }
+
+            GL.End();
+        }
+
+        private void DrawLabReference()
+        {
+            // a axis: green ↔ red
+            // b axis: blue ↔ yellow
+            // L axis: dark ↔ light
+
+            DrawColoredAxes(
+                "a",
+                "b",
+                "L",
+                Color.Red,
+                Color.Gold,
+                Color.White);
+
+            // Main bounding guide
+            DrawWireCube(
+                -1.0f,
+                1.0f,
+                Color.FromArgb(70, 70, 70));
+
+            // Neutral gray L axis at a=0, b=0
+            GL.LineWidth(2.0f);
+            GL.Begin(PrimitiveType.Lines);
+
+            GL.Color3(Color.White);
+            GL.Vertex3(0.0f, 0.0f, -1.0f);
+            GL.Vertex3(0.0f, 0.0f, 1.0f);
+
+            GL.End();
+
+            // a-b planes at dark, middle, light L values
+            DrawABPlane(-1.0f, Color.FromArgb(45, 45, 45));
+            DrawABPlane(0.0f, Color.FromArgb(75, 75, 75));
+            DrawABPlane(1.0f, Color.FromArgb(45, 45, 45));
+
+            // Cross axes in the middle a-b plane
+            GL.LineWidth(1.5f);
+            GL.Begin(PrimitiveType.Lines);
+
+            // a axis
+            GL.Color3(Color.Red);
+            GL.Vertex3(-1.0f, 0.0f, 0.0f);
+            GL.Vertex3(1.0f, 0.0f, 0.0f);
+
+            // b axis
+            GL.Color3(Color.Gold);
+            GL.Vertex3(0.0f, -1.0f, 0.0f);
+            GL.Vertex3(0.0f, 1.0f, 0.0f);
+
+            GL.End();
+        }
+
+        private void DrawABPlane(float z, Color color)
+        {
+            GL.Color3(color);
+            GL.LineWidth(1.0f);
+
+            GL.Begin(PrimitiveType.LineLoop);
+
+            GL.Vertex3(-1.0f, -1.0f, z);
+            GL.Vertex3(1.0f, -1.0f, z);
+            GL.Vertex3(1.0f, 1.0f, z);
+            GL.Vertex3(-1.0f, 1.0f, z);
+
+            GL.End();
+
+            GL.Begin(PrimitiveType.Lines);
+
+            GL.Vertex3(-1.0f, 0.0f, z);
+            GL.Vertex3(1.0f, 0.0f, z);
+
+            GL.Vertex3(0.0f, -1.0f, z);
+            GL.Vertex3(0.0f, 1.0f, z);
+
+            GL.End();
+        }
+
+        private void DrawLumaChromaReference(string label)
+        {
+            DrawColoredAxes(
+                "Chroma-X",
+                "Chroma-Y",
+                "Y",
+                Color.DeepSkyBlue,
+                Color.OrangeRed,
+                Color.White);
+
+            // Bounding guide still useful, but not as "RGB cube"
+            DrawWireCube(
+                -1.0f,
+                1.0f,
+                Color.FromArgb(55, 55, 55));
+
+            // Chroma neutral vertical axis: Cb/Cr or U/V = 128
+            GL.LineWidth(2.0f);
+            GL.Begin(PrimitiveType.Lines);
+
+            GL.Color3(Color.White);
+            GL.Vertex3(0.0f, 0.0f, -1.0f);
+            GL.Vertex3(0.0f, 0.0f, 1.0f);
+
+            GL.End();
+
+            // Chroma planes at low/mid/high luma
+            DrawChromaPlane(-1.0f, Color.FromArgb(45, 45, 45));
+            DrawChromaPlane(0.0f, Color.FromArgb(85, 85, 85));
+            DrawChromaPlane(1.0f, Color.FromArgb(45, 45, 45));
+
+            // central neutral point line markers
+            DrawNeutralChromaMarkers();
+        }
+
+        private void DrawChromaPlane(float z, Color color)
+        {
+            GL.Color3(color);
+            GL.LineWidth(1.0f);
+
+            GL.Begin(PrimitiveType.LineLoop);
+
+            GL.Vertex3(-1.0f, -1.0f, z);
+            GL.Vertex3(1.0f, -1.0f, z);
+            GL.Vertex3(1.0f, 1.0f, z);
+            GL.Vertex3(-1.0f, 1.0f, z);
+
+            GL.End();
+
+            GL.Begin(PrimitiveType.Lines);
+
+            GL.Vertex3(-1.0f, 0.0f, z);
+            GL.Vertex3(1.0f, 0.0f, z);
+
+            GL.Vertex3(0.0f, -1.0f, z);
+            GL.Vertex3(0.0f, 1.0f, z);
+
+            GL.End();
+        }
+
+        private void DrawNeutralChromaMarkers()
+        {
+            GL.PointSize(6.0f);
+
+            GL.Begin(PrimitiveType.Points);
+
+            GL.Color3(Color.White);
+            GL.Vertex3(0.0f, 0.0f, -1.0f);
+            GL.Vertex3(0.0f, 0.0f, 0.0f);
+            GL.Vertex3(0.0f, 0.0f, 1.0f);
+
+            GL.End();
+        }
+
+        private void DrawCmykSubspaceReference()
+        {
+            DrawColoredAxes(
+                "C",
+                "M",
+                "K",
+                Color.Cyan,
+                Color.Magenta,
+                Color.Black);
+
+            // CMYK is 4D. This cube is a selected 3D subspace: C-M-K.
+            DrawWireCube(
+                -1.0f,
+                1.0f,
+                Color.FromArgb(80, 80, 80));
+
+            // K axis emphasized because K is black ink / darkness
+            GL.LineWidth(2.5f);
+
+            GL.Begin(PrimitiveType.Lines);
+
+            GL.Color3(Color.White);
+            GL.Vertex3(-1.0f, -1.0f, -1.0f);
+            GL.Color3(Color.Black);
+            GL.Vertex3(-1.0f, -1.0f, 1.0f);
+
+            GL.End();
+
+            // C-M planes for low/mid/high K
+            DrawCmyPlaneAtK(-1.0f, Color.FromArgb(45, 45, 45));
+            DrawCmyPlaneAtK(0.0f, Color.FromArgb(70, 70, 70));
+            DrawCmyPlaneAtK(1.0f, Color.FromArgb(45, 45, 45));
+        }
+
+        private void DrawCmyPlaneAtK(float z, Color color)
+        {
+            GL.Color3(color);
+            GL.LineWidth(1.0f);
+
+            GL.Begin(PrimitiveType.LineLoop);
+
+            GL.Vertex3(-1.0f, -1.0f, z);
+            GL.Vertex3(1.0f, -1.0f, z);
+            GL.Vertex3(1.0f, 1.0f, z);
+            GL.Vertex3(-1.0f, 1.0f, z);
+
+            GL.End();
+        }
+
+        private void DrawWireCube(float min, float max, Color color)
+        {
+            GL.Color3(color);
+            GL.LineWidth(1.0f);
+
+            GL.Begin(PrimitiveType.Lines);
+
+            // bottom square
+            GL.Vertex3(min, min, min); GL.Vertex3(max, min, min);
+            GL.Vertex3(max, min, min); GL.Vertex3(max, max, min);
+            GL.Vertex3(max, max, min); GL.Vertex3(min, max, min);
+            GL.Vertex3(min, max, min); GL.Vertex3(min, min, min);
+
+            // top square
+            GL.Vertex3(min, min, max); GL.Vertex3(max, min, max);
+            GL.Vertex3(max, min, max); GL.Vertex3(max, max, max);
+            GL.Vertex3(max, max, max); GL.Vertex3(min, max, max);
+            GL.Vertex3(min, max, max); GL.Vertex3(min, min, max);
+
+            // verticals
+            GL.Vertex3(min, min, min); GL.Vertex3(min, min, max);
+            GL.Vertex3(max, min, min); GL.Vertex3(max, min, max);
+            GL.Vertex3(max, max, min); GL.Vertex3(max, max, max);
+            GL.Vertex3(min, max, min); GL.Vertex3(min, max, max);
+
+            GL.End();
+        }
+
+        private void DrawColoredAxes(
+            string xLabel,
+            string yLabel,
+            string zLabel,
+            Color xColor,
+            Color yColor,
+            Color zColor)
+        {
+            GL.LineWidth(2.0f);
+
+            GL.Begin(PrimitiveType.Lines);
+
+            // X axis
+            GL.Color3(xColor);
+            GL.Vertex3(-1.2f, -1.2f, -1.2f);
+            GL.Vertex3(1.2f, -1.2f, -1.2f);
+
+            // Y axis
+            GL.Color3(yColor);
+            GL.Vertex3(-1.2f, -1.2f, -1.2f);
+            GL.Vertex3(-1.2f, 1.2f, -1.2f);
+
+            // Z axis
+            GL.Color3(zColor);
+            GL.Vertex3(-1.2f, -1.2f, -1.2f);
+            GL.Vertex3(-1.2f, -1.2f, 1.2f);
+
+            GL.End();
         }
     }
 }

@@ -83,6 +83,8 @@ namespace PixelLab.Servicess
         {
             ImageColorDistribution3DResult result = new ImageColorDistribution3DResult();
 
+            result.ProjectionType = projection;
+
             switch (projection)
             {
                 case ImageColorProjection3DType.RgbCube:

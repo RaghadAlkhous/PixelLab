@@ -65,7 +65,7 @@ namespace PixelLab.Models
 
             ClearPreview();
 
-            PreviewImage = new Bitmap(previewImage);
+            this.PreviewImage = new Bitmap(previewImage);
         }
 
         public void ClearPreview()

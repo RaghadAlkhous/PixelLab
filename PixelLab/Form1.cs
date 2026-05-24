@@ -24,7 +24,7 @@ namespace PixelLab
 
             InitializeComponent();
             InitializeCustomSettings();
-
+            UpdateCommandState();
         }
 
         private void InitializeCustomSettings()
@@ -33,7 +33,7 @@ namespace PixelLab
             pictureBoxMain.DragEnter += PictureBoxMain_DragEnter;
             pictureBoxMain.DragDrop += PictureBoxMain_DragDrop;
             cmbColorSpace.SelectedIndex = 0;
-            lblStatus.Text = "جاهز - اسحب صورة أو اضغط فتح";
+            lblStatus.Text = "Ready - Drag Image or Click Open";
         }
 
         #region تحميل وعرض الصور - الطلب الأول
@@ -49,15 +49,16 @@ namespace PixelLab
             pictureBoxMain.Image = new Bitmap(image);
             pictureBoxMain.SizeMode = PictureBoxSizeMode.Zoom;
             pictureBoxMain.Refresh();
-            lblStatus.Text = $"تم تحميل الصورة: {image.Width}×{image.Height} بكسل";
+            lblStatus.Text = $"Image Loaded: {image.Width}×{image.Height} pixels";
+            UpdateCommandState();
         }
 
         private void openToolStripMenuItem_Click(object sender, EventArgs e)
         {
             using (OpenFileDialog dlg = new OpenFileDialog())
             {
-                dlg.Filter = "ملفات الصور|*.jpg;*.jpeg;*.png;*.bmp;*.gif";
-                dlg.Title = "اختر صورة لفتحها";
+                dlg.Filter = "Image Files|*.jpg;*.jpeg;*.png;*.bmp;*.gif";
+                dlg.Title = "Select image to open it";
                 if (dlg.ShowDialog() == DialogResult.OK)
                 {
                     LoadImage(dlg.FileName);
@@ -72,7 +73,7 @@ namespace PixelLab
                 Bitmap image = new Bitmap(filePath);
                 _workspace.LoadImage(image, filePath);
                 DisplayImage(_workspace.CurrentDisplayImage);
-                lblStatus.Text = $"تم تحميل: {Path.GetFileName(filePath)}";
+                lblStatus.Text = $"Loaded: {Path.GetFileName(filePath)}";
 
                 // تفعيل الأزرار والكومو بوكس في لوحة تعديل القناة بعد تحميل الصورة
                 _channelPanel.SetPanelEnabled(true);
@@ -80,7 +81,7 @@ namespace PixelLab
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"خطأ في تحميل الصورة:\n{ex.Message}", "خطأ", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Loading Exception:\n{ex.Message}", "error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -148,11 +149,11 @@ namespace PixelLab
                         break;
                 }
                 DisplayImage(_workspace.WorkingImage);
-                lblStatus.Text = $"تم التحويل إلى نظام: {currentColorSpace}";
+                lblStatus.Text = $"Converted to space: {currentColorSpace}";
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"خطأ في التحويل:\n{ex.Message}", "خطأ", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Conversion Error:\n{ex.Message}", "error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -164,24 +165,24 @@ namespace PixelLab
         {
             if (pictureBoxMain.Image == null)
             {
-                MessageBox.Show("لا توجد صورة لحفظها", "تنبيه", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("No Image to save it..!", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
             using (SaveFileDialog dlg = new SaveFileDialog())
             {
                 dlg.Filter = "JPEG Image|*.jpg|PNG Image|*.png|Bitmap Image|*.bmp";
-                dlg.Title = "حفظ الصورة";
+                dlg.Title = "Save Image";
                 if (dlg.ShowDialog() == DialogResult.OK)
                 {
                     try
                     {
                         pictureBoxMain.Image.Save(dlg.FileName);
-                        lblStatus.Text = $"تم الحفظ: {Path.GetFileName(dlg.FileName)}";
-                        MessageBox.Show("تم حفظ الصورة بنجاح", "نجاح", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        lblStatus.Text = $"Saved: {Path.GetFileName(dlg.FileName)}";
+                        MessageBox.Show("saved Successfully", "Sucess", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show($"خطأ في الحفظ:\n{ex.Message}", "خطأ", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        MessageBox.Show($"Saving Error:\n{ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                 }
             }
@@ -198,25 +199,25 @@ namespace PixelLab
             DisplayImage(_workspace.OriginalImage);
             _channelPanel.ResetSettings();
 
-            lblStatus.Text = "تم إعادة التعيين";
+            lblStatus.Text = "Resetted";
         }
 
         private void imageInfoToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (_workspace.HasImage)
+            if (!_workspace.HasImage)
             {
-                MessageBox.Show("لا توجد صورة محددة لعرض معلوماتها", "تنبيه",
+                MessageBox.Show("No image exists for displaying its info", "Warning",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
             try
             {
                 string info = ImageInfoService.GetImageInfo(_workspace.WorkingImage, _workspace.CurrentFilePath);
-                MessageBox.Show(info, "معلومات الصورة", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show(info, "Iamge Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"خطأ في عرض المعلومات:\n{ex.Message}", "خطأ", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Displaying Error:\n{ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -237,7 +238,7 @@ namespace PixelLab
 
         private void ApplyChannelPreview()
         {
-            if (_workspace.HasImage)
+            if (!_workspace.HasImage)
                 return;
 
             try
@@ -317,19 +318,6 @@ namespace PixelLab
             }
         }
 
-        private void UpdateCommandState()
-        {
-            bool hasImage = _workspace.HasImage;
-
-            //_btnReset.Enabled = hasImage;
-            //_btnSave.Enabled = hasImage;
-
-            //_colorSpacePanel.SetPanelEnabled(hasImage);
-            _channelPanel.SetPanelEnabled(hasImage);
-            visualizing2DToolStripMenuItem.Enabled = hasImage;
-            visualizing3DToolStripMenuItem.Enabled = hasImage;
-        }
-
         #endregion
 
         #region  تمثيل أنظمة الألوان  ضمن فضاءات ثنائية وثلاثية الأبعاد - الطلب الرابع والخامس
@@ -377,18 +365,17 @@ namespace PixelLab
         }
         #endregion
 
-
         #region الطلب السابع: انتقاء الألوان (Quantization)
 
         private void quantizeToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (!_workspace.HasImage) { MessageBox.Show("الرجاء تحميل صورة أولاً"); return; }
+            if (!_workspace.HasImage) { MessageBox.Show("Please Load Image First..!"); return; }
 
             int k = PromptForK();
             if (k < 2 || k > 256) return;
 
             Cursor = Cursors.WaitCursor;
-            lblStatus.Text = $"جاري المعاينة: {k} لون...";
+            lblStatus.Text = $"Processing: {k} Color...";
 
             try
             {
@@ -408,12 +395,12 @@ namespace PixelLab
                 _workspace.ReplacePreviewImage(preview);
                 DisplayImage(_workspace.CurrentDisplayImage);
 
-                lblStatus.Text = $" تمت معاينة : {k} لون  |  عيد التجربة او قم بالالغاء او احفظ النتيجة";
+                lblStatus.Text = $"Processed: {k} color | Try again, cancel, or save the result.";
                 ShowQuantizeButtons(k);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"خطأ: {ex.Message}");
+                MessageBox.Show($"Error: {ex.Message}");
                 _workspace.ClearPreview();
                 DisplayImage(_workspace.CurrentDisplayImage);
             }
@@ -424,15 +411,15 @@ namespace PixelLab
         {
             using (var f = new Form())
             {
-                f.Text = "انتقاء الألوان"; f.Size = new Size(300, 140);
+                f.Text = "Quantize Colors"; f.Size = new Size(300, 140);
                 f.StartPosition = FormStartPosition.CenterParent;
                 f.FormBorderStyle = FormBorderStyle.FixedDialog;
                 f.MaximizeBox = false; f.MinimizeBox = false;
 
-                var lbl = new Label { Text = "عدد الألوان (2-256):", Location = new Point(20, 20), AutoSize = true };
+                var lbl = new Label { Text = "Colors Numbers (2-256):", Location = new Point(20, 20), AutoSize = true };
                 var num = new NumericUpDown { Minimum = 2, Maximum = 256, Value = 8, Location = new Point(20, 45), Width = 100 };
-                var ok = new Button { Text = "موافق", DialogResult = DialogResult.OK, Location = new Point(140, 40), Width = 80 };
-                var cancel = new Button { Text = "إلغاء", DialogResult = DialogResult.Cancel, Location = new Point(140, 70), Width = 80 };
+                var ok = new Button { Text = "Ok", DialogResult = DialogResult.OK, Location = new Point(140, 40), Width = 80 };
+                var cancel = new Button { Text = "Cancel", DialogResult = DialogResult.Cancel, Location = new Point(140, 70), Width = 80 };
 
                 f.Controls.AddRange(new Control[] { lbl, num, ok, cancel });
                 f.AcceptButton = ok; f.CancelButton = cancel;
@@ -445,24 +432,24 @@ namespace PixelLab
         {
             CleanupQuantizeButtons();
 
-            var apply = new Button { Name = "btnQApply", Text = " تطبيق", Dock = DockStyle.Top, Height = 30, BackColor = Color.LightGreen };
+            var apply = new Button { Name = "btnQApply", Text = " Apply", Dock = DockStyle.Top, Height = 30, BackColor = Color.DarkOliveGreen };
             apply.Click += (s, e) => {
                 _workspace.ReplaceWorkingImage(_workspace.PreviewImage);
                 _workspace.ClearPreview();
                 DisplayImage(_workspace.CurrentDisplayImage);
                 CleanupQuantizeButtons();
-                lblStatus.Text = " تم التطبيق على WorkingImage";
+                lblStatus.Text = "Applied on \"WorkingImage\"";
             };
 
-            var cancelBtn = new Button { Name = "btnQCancel", Text = " إلغاء", Dock = DockStyle.Top, Height = 30, BackColor = Color.LightCoral };
+            var cancelBtn = new Button { Name = "btnQCancel", Text = "Cancel ", Dock = DockStyle.Top, Height = 30, BackColor = Color.Coral };
             cancelBtn.Click += (s, e) => {
                 _workspace.ClearPreview();
                 DisplayImage(_workspace.CurrentDisplayImage);
                 CleanupQuantizeButtons();
-                lblStatus.Text = " تم الإلغاء";
+                lblStatus.Text = "Canceled";
             };
 
-            var retry = new Button { Name = "btnQRetry", Text = $" جرب ({k})", Dock = DockStyle.Top, Height = 30, BackColor = Color.LightBlue };
+            var retry = new Button { Name = "btnQRetry", Text = $"Try ({k})", Dock = DockStyle.Top, Height = 30, BackColor = Color.RoyalBlue };
             retry.Click += (s, e) => {
                 _workspace.ClearPreview();
                 DisplayImage(_workspace.CurrentDisplayImage);
@@ -485,6 +472,49 @@ namespace PixelLab
         }
 
         #endregion
-        
+
+        #region إضافي: مقارنة قبل وبعد
+
+        private void BtnBeforeAfter_Click(object sender, EventArgs e)
+        {
+            if (!_workspace.HasImage)
+            {
+                lblStatus.Text = "Load an image first.";
+
+                MessageBox.Show(
+                    "Please load an image before opening before/after comparison.",
+                    "No Image",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+
+                return;
+            }
+
+            using (BeforeAfterForm form = new BeforeAfterForm(_workspace))
+            {
+                form.ShowDialog(this);
+            }
+        }
+
+        #endregion
+
+        private void UpdateCommandState()
+        {
+            bool hasImage = _workspace.HasImage;
+
+            //_btnReset.Enabled = hasImage;
+            //_btnSave.Enabled = hasImage;
+
+            //_colorSpacePanel.SetPanelEnabled(hasImage);
+            cmbColorSpace.Enabled = hasImage;
+            saveToolStripMenuItem.Enabled = hasImage;
+            imageInfoToolStripMenuItem.Enabled = hasImage;
+            resetToolStripMenuItem.Enabled = hasImage;
+            quantizeToolStripMenuItem.Enabled = hasImage;
+            _channelPanel.SetPanelEnabled(hasImage);
+            visualizing2DToolStripMenuItem.Enabled = hasImage;
+            visualizing3DToolStripMenuItem.Enabled = hasImage;
+            beforeAfterToolStripMenuItem.Enabled = hasImage;
+        }
     }
 }
