@@ -27,13 +27,14 @@ namespace PixelLab.Controls
         public ChannelPanelControl()
         {
             Dock = DockStyle.Top;
-            Height = 360;
+            Height = 400;
             BackColor = Color.FromArgb(30, 30, 30);
 
             _rows = new ChannelRow[4];
 
             var title = new Label
             {
+                Margin = new Padding(5, 5, 5, 5), // left, top, right, bottom,
                 Text = "Channel Processing",
                 Dock = DockStyle.Top,
                 Height = 30,
@@ -67,7 +68,13 @@ namespace PixelLab.Controls
             var rowsPanel = new Panel
             {
                 Dock = DockStyle.Top,
-                Height = 105,
+                Height = 140,
+                BackColor = Color.FromArgb(30, 30, 30)
+            };
+            var spacerPanel = new Panel
+            {
+                Dock = DockStyle.Top,
+                Height = 10,
                 BackColor = Color.FromArgb(30, 30, 30)
             };
 
@@ -82,7 +89,7 @@ namespace PixelLab.Controls
                 rowsPanel.Controls.Add(_rows[i].Panel);
                 _rows[i].Panel.BringToFront();
             }
-
+            rowsPanel.Margin = new Padding(0, 0, 0, 20);
             _btnResetSettings = CreateButton("Reset Channel Settings");
             _btnApplyToWorking = CreateButton("Apply to Working Image");
             _btnClearPreview = CreateButton("Clear Channel Preview");
@@ -90,6 +97,7 @@ namespace PixelLab.Controls
             Controls.Add(_btnClearPreview);
             Controls.Add(_btnApplyToWorking);
             Controls.Add(_btnResetSettings);
+            Controls.Add(spacerPanel);
             Controls.Add(rowsPanel);
             Controls.Add(_selectedChannelComboBox);
             Controls.Add(selectedChannelLabel);
@@ -169,7 +177,7 @@ namespace PixelLab.Controls
             {
                 Text = text,
                 Dock = DockStyle.Top,
-                Height = 30,
+                Height = 25,
                 BackColor = Color.FromArgb(63, 63, 70),
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
@@ -412,11 +420,10 @@ namespace PixelLab.Controls
 
                 _offsetTrackBar.Scroll += delegate
                 {
-                    _offsetValueLabel.Text = _offsetTrackBar.Value.ToString();
+                    _offsetValueLabel.Text =
+                        _offsetTrackBar.Value.ToString();
 
                     RaiseChanged();
-
-
                 };
             }
 

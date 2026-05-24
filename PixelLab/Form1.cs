@@ -7,6 +7,7 @@ using PixelLab.Models;
 using PixelLab.Forms;
 using PixelLab.Utils;
 using PixelLab.Services;
+using PixelLab.Controls;
 
 namespace PixelLab
 {
@@ -14,6 +15,8 @@ namespace PixelLab
     {
         private string currentColorSpace = "RGB";
 
+        private readonly SelectedColorState _selectedColorState;
+        private readonly SelectedColorPanelControl _selectedColorPanel;
         private PixelLabWorkspace _workspace;
         private readonly ChannelProcessingService _channelProcessingService;
 
@@ -25,6 +28,9 @@ namespace PixelLab
             InitializeComponent();
             InitializeCustomSettings();
             UpdateCommandState();
+
+            _selectedColorState = new SelectedColorState();
+            _selectedColorPanel = new SelectedColorPanelControl();
         }
 
         private void InitializeCustomSettings()
@@ -130,25 +136,25 @@ namespace PixelLab
                 switch (currentColorSpace)
                 {
                     case "RGB":
-                        _workspace.ReplaceWorkingImage(ColorConversionService.ConvertToRGB(_workspace.OriginalImage));
+                        _workspace.ReplacePreviewImage(ColorConversionService.ConvertToRGB(_workspace.OriginalImage));
                         break;
                     case "CMY":
-                        _workspace.ReplaceWorkingImage(ColorConversionService.ConvertToCMY(_workspace.OriginalImage));
+                        _workspace.ReplacePreviewImage(ColorConversionService.ConvertToCMY(_workspace.OriginalImage));
                         break;
                     case "HSV":
-                        _workspace.ReplaceWorkingImage(ColorConversionService.ConvertToHSV(_workspace.OriginalImage));
+                        _workspace.ReplacePreviewImage(ColorConversionService.ConvertToHSV(_workspace.OriginalImage));
                         break;
                     case "YUV":
-                        _workspace.ReplaceWorkingImage(ColorConversionService.ConvertToYUV(_workspace.OriginalImage));
+                        _workspace.ReplacePreviewImage(ColorConversionService.ConvertToYUV(_workspace.OriginalImage));
                         break;
                     case "YCbCr":
-                        _workspace.ReplaceWorkingImage(ColorConversionService.ConvertToYCbCr(_workspace.OriginalImage));
+                        _workspace.ReplacePreviewImage(ColorConversionService.ConvertToYCbCr(_workspace.OriginalImage));
                         break;
                     case "LAB":
-                        _workspace.ReplaceWorkingImage(ColorConversionService.ConvertToLAB(_workspace.OriginalImage));
+                        _workspace.ReplacePreviewImage(ColorConversionService.ConvertToLAB(_workspace.OriginalImage));
                         break;
                 }
-                DisplayImage(_workspace.WorkingImage);
+                DisplayImage(_workspace.CurrentDisplayImage);
                 lblStatus.Text = $"Converted to space: {currentColorSpace}";
             }
             catch (Exception ex)
